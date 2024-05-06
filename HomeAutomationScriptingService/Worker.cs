@@ -19,7 +19,7 @@ namespace HomeAutomationScriptingService
             foreach (var scriptingObject in scriptingObjects)
                 scriptingObject.InitScriptEngine(engine);
 
-            var scripts = Directory.EnumerateFiles(WorkerOptions.ScriptsFilesFolder);
+            var scripts = Directory.EnumerateFiles("./scripts");
             foreach (var scriptFilePath in scripts)
             {
                 var scriptText = File.ReadAllText(scriptFilePath);
@@ -28,10 +28,11 @@ namespace HomeAutomationScriptingService
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                if (Logger.IsEnabled(LogLevel.Information))
+                if (Logger.IsEnabled(LogLevel.Trace))
                 {
-                    Logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                    Logger.LogTrace("Worker running at: {time}", DateTimeOffset.Now);
                 }
+
                 await Task.Delay(1000, stoppingToken);
             }
         }
