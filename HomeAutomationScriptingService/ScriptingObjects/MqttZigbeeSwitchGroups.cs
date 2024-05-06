@@ -1,9 +1,14 @@
 ﻿using Microsoft.ClearScript;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 
 namespace HomeAutomationScriptingService.ScriptingObjects
 {
-    public class MqttZigbeeSwitchGroups(IMemoryCache cache, ILogger<MqttZigbeeSwitchGroups> logger) : ScriptingObject(logger)
+    public class MqttZigbeeSwitchGroups(
+            IMemoryCache cache,
+            ILogger<MqttZigbeeSwitchGroups> logger,
+            IOptions<MqttZigbeeSwitchGroupsConfiguration> componentConfiguration) :
+        ScriptingConfigurableObject<MqttZigbeeSwitchGroupsConfiguration>(logger, componentConfiguration)
     {
         protected IMqttClient? MqttClient { get; set; }
         protected List<(string GroupName, List<(string MqttPrefix, string SwitchId, string SwitchButton)> Switches)> SwitchGroups { get; } = [];
@@ -80,7 +85,10 @@ namespace HomeAutomationScriptingService.ScriptingObjects
             Logger.LogTrace("{ClassName} - {MethodName} - {switchId}, {switchButton}, {state}",
                 nameof(MqttZigbeeSwitchGroups), nameof(StoreStateInCache), switchId, switchButton, state);
 
-            SwitchButtonStateCache.Set($"{switchId}_{switchButton}", state, TimeSpan.FromSeconds(10));
+            SwitchButtonStateCache.Set(
+                $"{switchId}_{switchButton}",
+                state,
+                TimeSpan.FromSeconds(ComponentConfiguration.StateCacheDurationInSeconds));
         }
 
         private string? ReadStateFromCache(string switchId, string switchButton)
