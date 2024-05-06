@@ -5,7 +5,7 @@ VisualStudioVersion = 17.8.34601.278
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{25605572-B180-46D4-B043-2321398FAC81}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HomeAutomationScriptingService", "HomeAutomationScriptingService\HomeAutomationScriptingService.csproj", "{5B90BD6C-C57F-4358-9BF7-1C6C527FA66B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HomeAutomationScriptingService", "HomeAutomationScriptingService\HomeAutomationScriptingService.csproj", "{5B90BD6C-C57F-4358-9BF7-1C6C527FA66B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
