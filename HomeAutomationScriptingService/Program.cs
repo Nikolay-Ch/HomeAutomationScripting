@@ -1,5 +1,7 @@
 using System.Reflection;
 using HomeAutomationScriptingService.ScriptingObjects;
+using Microsoft.Extensions.Configuration;
+using NReco.Logging.File;
 using Syslog.Framework.Logging;
 
 namespace HomeAutomationScriptingService
@@ -60,6 +62,9 @@ namespace HomeAutomationScriptingService
                         // Configure structured data here if desired.
                         logging.AddSyslog(settings);
                     }
+
+                    // add logging to file capability
+                    logging.AddFile(ctx.Configuration.GetSection("Logging"));
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
