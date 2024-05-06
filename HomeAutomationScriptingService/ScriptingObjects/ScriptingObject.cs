@@ -14,9 +14,9 @@ namespace HomeAutomationScriptingService.ScriptingObjects
         public abstract void InitScriptEngine(IScriptEngine scriptEngine);
     }
 
-    public abstract class ScriptingConfigurableObject<T>(ILogger<object> logger, IOptions<T> configuration)
+    public abstract class ScriptingConfigurableObject<T>(ILogger<object> logger, IOptions<T> componentConfiguration)
         : ScriptingObject(logger) where T : class
     {
-        protected T Configuration { get; } = configuration.Value;
+        protected T ComponentConfiguration { get; } = componentConfiguration.Value;
     }
 }

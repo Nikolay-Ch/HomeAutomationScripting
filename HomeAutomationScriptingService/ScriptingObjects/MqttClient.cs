@@ -34,22 +34,22 @@ namespace HomeAutomationScriptingService.ScriptingObjects
             scriptEngine.AddHostType("SubscriberAction", typeof(Action<string, string>));
         }
 
-        public MqttClient(ILogger<MqttClient> logger, IOptions<MqttClientConfiguration> configuration)
-            : base(logger, configuration)
+        public MqttClient(ILogger<MqttClient> logger, IOptions<MqttClientConfiguration> componentConfiguration)
+            : base(logger, componentConfiguration)
         {
-            Logger.LogInformation("Creating MqttClient at: {time}. Uri:{uri}", DateTimeOffset.Now, Configuration.MqttUri);
+            Logger.LogInformation("Creating MqttClient at: {time}. Uri:{uri}", DateTimeOffset.Now, ComponentConfiguration.MqttUri);
 
             var tlsOptions = new MqttClientTlsOptions()
             {
-                SslProtocol = Configuration.MqttSecure ? SslProtocols.Tls12 : SslProtocols.None,
+                SslProtocol = ComponentConfiguration.MqttSecure ? SslProtocols.Tls12 : SslProtocols.None,
                 IgnoreCertificateChainErrors = true,
                 IgnoreCertificateRevocationErrors = true
             };
 
             var options = new MqttClientOptionsBuilder()
-                .WithClientId(Configuration.ClientId.Replace("-", "").Replace(" ", ""))
-                .WithCredentials(Configuration.MqttUser, Configuration.MqttUserPassword)
-                .WithTcpServer(Configuration.MqttUri, Configuration.MqttPort)
+                .WithClientId(ComponentConfiguration.ClientId.Replace("-", "").Replace(" ", ""))
+                .WithCredentials(ComponentConfiguration.MqttUser, ComponentConfiguration.MqttUserPassword)
+                .WithTcpServer(ComponentConfiguration.MqttUri, ComponentConfiguration.MqttPort)
                 .WithCleanSession()
                 .WithTlsOptions(tlsOptions)
                 .Build();
