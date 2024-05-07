@@ -19,12 +19,19 @@ namespace HomeAutomationScriptingService
             foreach (var scriptingObject in scriptingObjects)
                 scriptingObject.InitScriptEngine(engine);
 
-            var scripts = Directory.EnumerateFiles("./scripts");
+            var scripts = Directory.EnumerateFiles("./scripts").ToList();
+            Logger.LogInformation("{scriptsCount} scripts founded.", scripts.Count);
+
             foreach (var scriptFilePath in scripts)
             {
+                Logger.LogInformation("Try to load script: {scriptFilePath}", scriptFilePath);
                 var scriptText = File.ReadAllText(scriptFilePath);
+
+                Logger.LogInformation("Try to execute script: {scriptFilePath}", scriptFilePath);
                 engine.Execute(scriptText);
             }
+
+            Logger.LogInformation("Loading scripts: done");
 
             while (!stoppingToken.IsCancellationRequested)
             {
