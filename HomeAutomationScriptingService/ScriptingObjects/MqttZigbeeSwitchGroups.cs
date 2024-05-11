@@ -24,6 +24,13 @@ namespace HomeAutomationScriptingService.ScriptingObjects
         protected List<(string GroupName, List<Switch> Switches)> SwitchGroups { get; } = [];
         protected IMemoryCache SwitchButtonStateCache { get; } = cache;
 
+
+        // kludge solution for switches, that have only one button without name (ex. Aqara switch H1)...
+        // you need to use this constant in script
+#pragma warning disable CA1822 // Mark members as static
+        public string DefaultButton => "*/main/*"; // this property used in scripts... so, it can't be a static property
+#pragma warning restore CA1822 // Mark members as static
+
         public override void InitScriptEngine(IScriptEngine scriptEngine)
         {
             Logger.LogTrace("{ClassName} - {MethodName} - {scriptEngine}",
@@ -75,6 +82,10 @@ namespace HomeAutomationScriptingService.ScriptingObjects
         {
             Logger.LogTrace("{ClassName} - {MethodName} - {topic}, {payload}",
                 nameof(MqttZigbeeSwitchGroups), nameof(SwitchGroupStateUpdated), topic, payload);
+
+            // fix one-button switch action payload. Add ephemeral name of button 'main'...
+            if (!payload.Contains('_'))
+                payload = $"{payload}_{DefaultButton}";
 
             var state = payload.Split('_');
             string switchButton = state[1];
@@ -166,7 +177,10 @@ namespace HomeAutomationScriptingService.ScriptingObjects
                 return;
             }
 
-            MqttClient.Publish($"{sw.MqttPrefix}/{sw.SwitchId}/set/state_{sw.SwitchButton}", toState);
+            // kludge solution for absent button-name of the one-button switches...
+            var stateButton = sw.SwitchButton == DefaultButton ? "state" : $"state_{sw.SwitchButton}";
+
+            MqttClient.Publish($"{sw.MqttPrefix}/{sw.SwitchId}/set/{stateButton}", toState);
         }
     }
 }
