@@ -2,6 +2,6 @@
 {
     public class MqttZigbeeSwitchGroupsConfiguration
     {
-        public required int StateCacheDurationInSeconds { get; set; } = 5;
+        public required int StateCacheDurationInSeconds { get; set; } = 2;
     }
 }

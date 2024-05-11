@@ -363,3 +363,5 @@ MigrationBackup/
 FodyWeavers.xsd
 /HomeAutomationScriptingService/Scripts/*
 /HomeAutomationScriptingService/appsettings.Development.json
+/HomeAutomationScripting.Docker.Build.cmd
+/HomeAutomationScriptingService/HomeAutomationScripting.Docker.Build.cmd

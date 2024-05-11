@@ -4,6 +4,16 @@ using Microsoft.Extensions.Options;
 
 namespace HomeAutomationScriptingService.ScriptingObjects
 {
+    public readonly record struct Switch(string MqttPrefix, string SwitchId, string SwitchButton, Func<string, string, string?> GetState)
+    {
+        public string MqttPrefix { get; } = MqttPrefix;
+        public string SwitchId { get; } = SwitchId;
+        public string SwitchButton { get; } = SwitchButton;
+        public string SwitchButtonState => GetState(SwitchId, SwitchButton) ?? "(null)";
+
+        public override string ToString() => $"(Id:{SwitchId}, Btn:{SwitchButton}, State:{SwitchButtonState})";
+    }
+
     public class MqttZigbeeSwitchGroups(
             IMemoryCache cache,
             ILogger<MqttZigbeeSwitchGroups> logger,
@@ -11,7 +21,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects
         ScriptingConfigurableObject<MqttZigbeeSwitchGroupsConfiguration>(logger, componentConfiguration)
     {
         protected IMqttClient? MqttClient { get; set; }
-        protected List<(string GroupName, List<(string MqttPrefix, string SwitchId, string SwitchButton)> Switches)> SwitchGroups { get; } = [];
+        protected List<(string GroupName, List<Switch> Switches)> SwitchGroups { get; } = [];
         protected IMemoryCache SwitchButtonStateCache { get; } = cache;
 
         public override void InitScriptEngine(IScriptEngine scriptEngine)
@@ -43,7 +53,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects
             Logger.LogTrace("{ClassName} - {MethodName} - {groupName}, {mqttPrefix}, {switchId}, {switchButton}",
                 nameof(MqttZigbeeSwitchGroups), nameof(AddSwitchIntoGroup), groupName, mqttPrefix, switchId, switchButton);
 
-            SwitchGroups.First(e=>e.GroupName == groupName).Switches.Add((mqttPrefix, switchId, switchButton));
+            SwitchGroups.First(e => e.GroupName == groupName).Switches.Add(new(mqttPrefix, switchId, switchButton, ReadStateFromCache));
         }
 
         public void RunGroup(string groupName)
@@ -57,7 +67,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects
                 return;
             }
 
-            foreach (var (MqttPrefix, SwitchId, _) in SwitchGroups.First(e => e.GroupName == groupName).Switches)
+            foreach (var (MqttPrefix, SwitchId, _, _) in SwitchGroups.First(e => e.GroupName == groupName).Switches)
                 MqttClient.Subscribe($"{MqttPrefix}/{SwitchId}/action", SwitchGroupStateUpdated);
         }
 
@@ -66,18 +76,30 @@ namespace HomeAutomationScriptingService.ScriptingObjects
             Logger.LogTrace("{ClassName} - {MethodName} - {topic}, {payload}",
                 nameof(MqttZigbeeSwitchGroups), nameof(SwitchGroupStateUpdated), topic, payload);
 
+            var state = payload.Split('_');
+            string switchButton = state[1];
+            string toState = state[0];
+
             // search for group...
-            var group = SwitchGroups.FirstOrDefault(e => e.Switches.Any(r => topic.Contains(r.SwitchId))).Switches;
+            var group = SwitchGroups
+                .FirstOrDefault(e => e.Switches.Any(r => topic.Contains(r.SwitchId) && r.SwitchButton == switchButton))
+                .Switches;
+
             if (group == null)
                 return;
 
-            var state = payload.Split('_');
+            string switchId = group.First(e => topic.Contains(e.SwitchId)).SwitchId;
 
-            StoreStateInCache(group.First(e => topic.Contains(e.SwitchId)).SwitchId, state[1], state[0]);
+            StoreStateInCache(switchId, switchButton, toState);
+
+            Logger.LogInformation("Switch group: {group}. To state: {toState}. Initiator: {initiator}",
+                group, toState, switchId);
 
             // search for switch button in group
             if (group.Any(e => e.SwitchButton == state[1]))
                 ChangeSwitchGroupState(group, state[0]);
+
+            Logger.LogInformation("Switch group: {groupName}. To state: {toState}. Done", group, toState);
         }
 
         private void StoreStateInCache(string switchId, string switchButton, string state)
@@ -103,21 +125,25 @@ namespace HomeAutomationScriptingService.ScriptingObjects
 
 
         readonly object ChangeSwitchGroupStateSyncObject = new();
-        private void ChangeSwitchGroupState(List<(string mqttPrefix, string SwitchId, string SwitchButton)> switchGroup, string state)
+        private void ChangeSwitchGroupState(List<Switch> switchGroup, string toState)
         {
-            Logger.LogTrace("{ClassName} - {MethodName} - {switchGroup}, {state}",
-                nameof(MqttZigbeeSwitchGroups), nameof(ChangeSwitchGroupState), switchGroup, state);
+            Logger.LogTrace("{ClassName} - {MethodName} - {switchGroup}, {ToState}",
+                nameof(MqttZigbeeSwitchGroups), nameof(ChangeSwitchGroupState), switchGroup, toState);
 
             lock (ChangeSwitchGroupStateSyncObject)
             {
                 // find all switches-button with wrong states
                 var switchesNeededToChangeState = switchGroup
-                    .Where(e => GetSwitchButtonState(e.SwitchId, e.SwitchButton) != state)
+                    .Where(e => GetSwitchButtonState(e.SwitchId, e.SwitchButton) != toState)
                     .ToList();
 
                 // set state for each switch-button
-                foreach (var (MqttPrefix, SwitchId, SwitchButton) in switchesNeededToChangeState)
-                    SetSwitchButtonState(MqttPrefix, SwitchId, SwitchButton, state);
+                foreach (var sw in switchesNeededToChangeState)
+                {
+                    Logger.LogInformation("Change switch state. {switch}. To state: {toState}.", sw, toState);
+
+                    SetSwitchButtonState(sw, toState);
+                }
             }
         }
 
@@ -129,10 +155,10 @@ namespace HomeAutomationScriptingService.ScriptingObjects
             return ReadStateFromCache(switchId, switchButton);
         }
 
-        private void SetSwitchButtonState(string mqttPrefix, string switchId, string switchButton, string state)
+        private void SetSwitchButtonState(Switch sw, string toState)
         {
-            Logger.LogTrace("{ClassName} - {MethodName} - {switchId}, {switchButton}, {state}",
-                nameof(MqttZigbeeSwitchGroups), nameof(SetSwitchButtonState), switchId, switchButton, state);
+            Logger.LogTrace("{ClassName} - {MethodName} - {Switch}, {ToState}",
+                nameof(MqttZigbeeSwitchGroups), nameof(SetSwitchButtonState), sw, toState);
 
             if (MqttClient == null)
             {
@@ -140,7 +166,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects
                 return;
             }
 
-            MqttClient.Publish($"{mqttPrefix}/{switchId}/set/state_{switchButton}", state);
+            MqttClient.Publish($"{sw.MqttPrefix}/{sw.SwitchId}/set/state_{sw.SwitchButton}", toState);
         }
     }
 }
