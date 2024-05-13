@@ -20,13 +20,11 @@ namespace HomeAutomationScriptingService.ScriptingObjects
         private string CacheKey => $"{SwitchId}_{SwitchButton}";
 
         /// <summary>
-        /// Script API-property. Store constant of the default (unnamed) button for switches,
-        /// that have single button or have unnamed button
+        /// Store constant of the default (unnamed) button for switches, that have single button or have unnamed button
+        /// Kludge solution for switches, that have only one button without name (ex. Aqara switch H1)...
+        /// you need to use this constant in script
         /// </summary>
-        // kludge solution for switches, that have only one button without name (ex. Aqara switch H1)...
-        // you need to use this constant in script
         public const string UnnamedButton = "*/main/*";
-        //public string DefaultButton => "*/main/*"; // this property used in scripts... so, it can't be a static property
 
         /// <summary>
         /// Switch-button state. We use cache to temporary store the button state to reduce coun of change-state zigbee commands
@@ -84,12 +82,12 @@ namespace HomeAutomationScriptingService.ScriptingObjects
         /// <param name="mqttPrefix">Zigbee prefix for topic of the switch</param>
         /// <param name="switchId">MAC-id of the switch</param>
         /// <param name="switchButton">Name of the switch button</param>
-        public void AddSwitch(string mqttPrefix, string switchId, string switchButton)
+        public void AddSwitch(string mqttPrefix, string switchId, string? switchButton = null)
         {
             Logger.LogTrace("{ClassName} - {MethodName} - {GroupId}, {mqttPrefix}, {switchId}, {switchButton}",
                 nameof(SwitchGroup), nameof(AddSwitch), GroupId, mqttPrefix, switchId, switchButton);
 
-            Switches.Add(new(mqttPrefix, switchId, switchButton, Logger, SwitchButtonStateCache, StateCacheDurationInSeconds));
+            Switches.Add(new(mqttPrefix, switchId, switchButton ?? Switch.UnnamedButton, Logger, SwitchButtonStateCache, StateCacheDurationInSeconds));
 
         }
     }
