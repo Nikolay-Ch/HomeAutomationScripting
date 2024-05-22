@@ -6,7 +6,7 @@ using MQTTnet.Extensions.ManagedClient;
 using System.Security.Authentication;
 using System.Text;
 
-namespace HomeAutomationScriptingService.ScriptingObjects
+namespace HomeAutomationScriptingService.ScriptingObjects.MqttClient
 {
     public interface IMqttClient
     {

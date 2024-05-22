@@ -1,8 +1,9 @@
-using System.Reflection;
 using HomeAutomationScriptingService.ScriptingObjects;
-using Microsoft.Extensions.Configuration;
+using HomeAutomationScriptingService.ScriptingObjects.MqttClient;
+using HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup;
 using NReco.Logging.File;
 using Syslog.Framework.Logging;
+using System.Reflection;
 
 namespace HomeAutomationScriptingService
 {

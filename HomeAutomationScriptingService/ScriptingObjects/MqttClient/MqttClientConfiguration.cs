@@ -3,7 +3,7 @@ using DeviceId.Encoders;
 using DeviceId.Formatters;
 using MQTTnet.Protocol;
 
-namespace HomeAutomationScriptingService.ScriptingObjects
+namespace HomeAutomationScriptingService.ScriptingObjects.MqttClient
 {
     public record class MqttClientConfiguration
     {
