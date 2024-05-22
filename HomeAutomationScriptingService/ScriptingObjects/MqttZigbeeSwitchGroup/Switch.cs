@@ -110,7 +110,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         /// Change state of the switch-button through MQTT-broker
         /// </summary>
         /// <param name="value">Target state</param>
-        protected abstract void MqttSetState(string value);
+        protected abstract void MqttSetState(string toState);
 
         /// <summary>
         /// Log error if MQTT not initialized
