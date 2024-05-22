@@ -27,9 +27,6 @@ MqttGroupSwitch - an object for creating groups of ZigBee switches running under
 * void AddSwitch(string switchType, string mqttTopicPrefix, string switchId, string buttonName) - add new switch in group. **switchType** - type of the switch: _Tuya_ or _Aqara_. **mqttTopicPrefix** - prefix of the MQTT-topic of the switch. **switchId** - MAC-id of the switch. **buttonName** - name of the switch's button. _Remark_: if a switch-button does not have name (for ex. one-button Aqara switches) not use the third parameter.
 * void Run() - run group
 
-## Switch type:
-string UnnamedButton - constant, that contains default name of the unnamed button (like Aqara one-button switch).
-
 ## Full example of use this API below:
 ```
 MqttGroupSwitch.Init(MQTT);
