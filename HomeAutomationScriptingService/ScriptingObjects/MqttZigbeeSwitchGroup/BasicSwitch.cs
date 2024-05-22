@@ -13,6 +13,24 @@
         : Switch(Configuration, SwitchButtonStateChanged, MqttPrefix, SwitchId, SwitchButton)
     {
         /// <summary>
+        /// Set state of the switch-button through MQTT-message
+        /// </summary>
+        /// <param name="toState">Target state</param>
+        protected override void MqttSetState(string toState)
+        {
+            Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {Switch} - {Button}, {ToState}",
+                nameof(BasicSwitch), nameof(MqttSetState), SwitchId, SwitchButton, toState);
+
+            if (LogErrorIfMqttIsNull())
+                return;
+
+            // kludge solution for absent button-name of the one-button switches...
+            var stateButton = SwitchButton == UnnamedButton ? "state" : $"state_{SwitchButton}";
+
+            Configuration.MqttClient!.Publish($"{MqttPrefix}/{SwitchId}/set/{stateButton}", toState);
+        }
+
+        /// <summary>
         /// Subscribe to MQTT-topics
         /// </summary>
         protected override void MqttSubscribe()
@@ -38,24 +56,6 @@
                 return;
 
             Configuration.MqttClient!.Unsubscribe(SwitchGroupStateUpdated, $"{@MqttPrefix}/{SwitchId}/action");
-        }
-
-        /// <summary>
-        /// Set state of the switch-button through MQTT-message
-        /// </summary>
-        /// <param name="toState">Target state</param>
-        protected override void MqttSetState(string toState)
-        {
-            Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {Switch} - {Button}, {ToState}",
-                nameof(BasicSwitch), nameof(MqttSetState), SwitchId, SwitchButton, toState);
-
-            if (LogErrorIfMqttIsNull())
-                return;
-
-            // kludge solution for absent button-name of the one-button switches...
-            var stateButton = SwitchButton == UnnamedButton ? "state" : $"state_{SwitchButton}";
-
-            Configuration.MqttClient!.Publish($"{MqttPrefix}/{SwitchId}/set/{stateButton}", toState);
         }
 
         /// <summary>

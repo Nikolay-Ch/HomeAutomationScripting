@@ -100,7 +100,6 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
                 nameof(MqttZigbeeSwitchGroups), nameof(InitScriptEngine), scriptEngine);
 
             scriptEngine.AddHostObject("MqttGroupSwitch", this);
-            scriptEngine.AddHostType(typeof(BasicSwitch));
         }
 
         /// <summary>
