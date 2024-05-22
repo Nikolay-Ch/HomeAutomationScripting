@@ -16,3 +16,26 @@ For example, when a certain message arrives in MQTT, something else can be done.
 Currently supports two objects inside JS scripts:
 MQTT - object for communication with the MQTT server
 MqttGroupSwitch - an object for creating groups of ZigBee switches running under ZigBee2MQTT control. Condition: the switches must have the **State action** option enabled. Switches combined into a group work together to turn on and off. If one switch from a group turns on, the MqttGroupSwitch object will turn on the rest of the switches in the group and vice versa, if one of the switches within the group turns off, the object will turn off all switches in the group.
+
+# MqttGroupSwitch API:
+
+## MqttGroupSwitch type:
+* void Init(MQTTClient object) - initialize MqttGroupSwitch object with MQTT-client.
+* SwitchGroup RegisterSwitchGroup() - create new switch-group object instance and return it
+* void RunGroup(SwitchGroup group) - run group
+
+## SwitchGroup type:
+* void AddSwitch(string MqttTopicPrefix, string SwitchId, string ButtonName) - add new switch in group. **MqttTopicPrefix** - prefix of the MQTT-topic of the switch. **SwitchId** - MAC-id of the switch. **ButtonName** - name of the switch's button. _Remark_: if a switch-button does not have name (for ex. one-button Aqara switches) not use the third parameter.
+
+## Switch type:
+strung UnnamedButton - constant, that contains default name
+
+## Full example of use this API below:
+```
+MqttGroupSwitch.Init(MQTT);
+let group = MqttGroupSwitch.RegisterSwitchGroup();
+group.AddSwitch("zigbee2mqtt", "0x92857749820e23df");
+group.AddSwitch("zigbee2mqtt", "0x653528905af6759c", "left");
+group.AddSwitch("zigbee2mqtt", "0x8935af65c8b94352", "right");
+MqttGroupSwitch.RunGroup(group);
+```
