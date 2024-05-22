@@ -1,0 +1,56 @@
+# https://sequencediagram.org/
+title Изменение состояния группы
+
+participant MqttClient
+participant Switch
+participant SwitchGroup
+participant Switch2
+participant Cache
+
+MqttClient-->Switch:Mqtt\nMessage\nCallback
+activate Switch
+
+Switch-->Cache:SetState
+activate Cache
+Cache-->Switch:
+deactivate Cache
+
+
+Switch-->SwitchGroup:ChangeGroupState
+activate SwitchGroup
+
+note over SwitchGroup:Lock()
+note over SwitchGroup:Foreach\nswitch\nin group
+
+
+SwitchGroup-->Switch2:StateSet
+activate Switch2
+
+Switch2-->Cache:TryGetValue
+activate Cache
+Cache-->Switch2:
+deactivate Cache
+
+alt State is null
+Switch2->MqttClient:MqttSetState
+activate MqttClient
+MqttClient->Switch2:
+deactivate MqttClient
+end
+
+Switch2-->Cache:Set
+activate Cache
+Cache-->Switch2:
+deactivate Cache
+
+Switch2-->SwitchGroup:
+deactivate Switch2
+
+note over SwitchGroup:Foreach\nend
+note over SwitchGroup:UnLock()
+
+SwitchGroup-->Switch:
+
+deactivate SwitchGroup
+
+deactivate Switch
