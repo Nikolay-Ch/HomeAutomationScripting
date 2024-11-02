@@ -24,15 +24,16 @@ MqttGroupSwitch - an object for creating groups of ZigBee switches running under
 * SwitchGroup RegisterSwitchGroup() - create new switch-group object instance and return it
 
 ## SwitchGroup type:
-* void AddSwitch(string switchType, string mqttTopicPrefix, string switchId, string buttonName) - add new switch in group. **switchType** - type of the switch: _Tuya_ or _Aqara_. **mqttTopicPrefix** - prefix of the MQTT-topic of the switch. **switchId** - MAC-id of the switch. **buttonName** - name of the switch's button. _Remark_: if a switch-button does not have name (for ex. one-button Aqara switches) not use the third parameter.
+* void AddSwitch(string switchType, string mqttTopicPrefix, string switchId, string buttonName) - add new switch in group. **switchType** - type of the switch: _Tuya_, _Aqara_ or _Shelly_. **mqttTopicPrefix** - prefix of the MQTT-topic of the switch. **switchId** - MAC-id of the switch. **buttonName** - name of the switch's button. _Remark_: if a switch-button does not have name (for ex. one-button Aqara switches) not use the third parameter.
 * void Run() - run group
 
 ## Full example of use this API below:
 ```
 MqttGroupSwitch.Init(MQTT);
 let group = MqttGroupSwitch.RegisterSwitchGroup();
-group.AddSwitch("Aqara", "zigbee2mqtt", "0x92857749820e23df");
-group.AddSwitch("Tuya", "zigbee2mqtt", "0x653528905af6759c", "left");
-group.AddSwitch("Aqara", "zigbee2mqtt", "0x8935af65c8b94352", "right");
+group.AddSwitch("Aqara", "zigbee2mqtt", "0x92857749820e23df"); // this is a button of the Aqara one-button switch
+group.AddSwitch("Tuya", "zigbee2mqtt", "0x653528905af6759c", "center"); // this is a center button ot the Tuya three-button switch
+group.AddSwitch("Aqara", "zigbee2mqtt", "0x8935af65c8b94352", "right"); // this is a right button of the Aqara two-button switch
+group.AddSwitch("Shelly", "shellies", "shellypro2-ab78e5631a", "switch:1"); // this is a channel 1 of the Shelly two-channel relay 
 group.Run();
 ```
