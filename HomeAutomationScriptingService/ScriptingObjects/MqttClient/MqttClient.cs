@@ -14,9 +14,8 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttClient
 
         void Publish(string topic, string payload);
         void Subscribe(string topic, Action<string, string> subscriber);
-        void Unsubscribe(Action<string, string> subscriber, string topic);
+        void Unsubscribe(string topic, Action<string, string> subscriber);
     }
-
     public class MqttClient : ScriptingConfigurableObject<MqttClientConfiguration>, IMqttClient
     {
         protected IManagedMqttClient ManagedMqttClient { get; }
@@ -108,7 +107,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttClient
             ManagedMqttClient.SubscribeAsync(topic).Wait();
         }
 
-        public void Unsubscribe(Action<string, string> subscriber, string topic)
+        public void Unsubscribe(string topic, Action<string, string> subscriber)
         {
             Logger.LogTrace("{ClassName} - {MethodName} - {subscriber}, {topic}",
                 nameof(MqttClient), nameof(Unsubscribe), subscriber, topic);

@@ -55,7 +55,7 @@
             if (LogErrorIfMqttIsNull())
                 return;
 
-            Configuration.MqttClient!.Unsubscribe(SwitchGroupStateUpdated, $"{@MqttPrefix}/{SwitchId}/action");
+            Configuration.MqttClient!.Unsubscribe($"{@MqttPrefix}/{SwitchId}/action", SwitchGroupStateUpdated);
         }
 
         /// <summary>

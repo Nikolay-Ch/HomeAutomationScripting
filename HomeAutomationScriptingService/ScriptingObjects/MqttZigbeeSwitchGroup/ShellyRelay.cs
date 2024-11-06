@@ -62,7 +62,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
             if (LogErrorIfMqttIsNull())
                 return;
 
-            Configuration.MqttClient!.Unsubscribe(SwitchGroupStateUpdated, SubscribedMqttTopic);
+            Configuration.MqttClient!.Unsubscribe(SubscribedMqttTopic, SwitchGroupStateUpdated);
         }
 
         /// <summary>
