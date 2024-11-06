@@ -10,18 +10,15 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttClient
 {
     public interface IMqttClient
     {
-        bool IsMqttConnected { get; }
-
         void Publish(string topic, string payload);
         void Subscribe(string topic, Action<string, string> subscriber);
         void Unsubscribe(string topic, Action<string, string> subscriber);
     }
     public class MqttClient : ScriptingConfigurableObject<MqttClientConfiguration>, IMqttClient
     {
+        protected ScriptingServiceMetrics Metrics { get; }
         protected IManagedMqttClient ManagedMqttClient { get; }
         protected Dictionary<string, List<Action<string, string>>> Subscribers { get; } = [];
-
-        public bool IsMqttConnected => ManagedMqttClient.IsConnected;
 
         public override void InitScriptEngine(IScriptEngine scriptEngine)
         {
@@ -33,10 +30,15 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttClient
             scriptEngine.AddHostType("SubscriberAction", typeof(Action<string, string>));
         }
 
-        public MqttClient(ILogger<MqttClient> logger, IOptions<MqttClientConfiguration> componentConfiguration)
+        public MqttClient(
+            ILogger<MqttClient> logger,
+            IOptions<MqttClientConfiguration> componentConfiguration,
+            ScriptingServiceMetrics metrics)
             : base(logger, componentConfiguration)
         {
             Logger.LogInformation("Creating MqttClient at: {time}. Uri:{uri}", DateTimeOffset.Now, ComponentConfiguration.MqttUri);
+
+            Metrics = metrics;
 
             var tlsOptions = new MqttClientTlsOptions()
             {
@@ -79,6 +81,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttClient
         private async Task MessageReceive(MqttApplicationMessageReceivedEventArgs e)
         {
             Logger.MessageReceive(e.ApplicationMessage.Topic, Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment));
+            Metrics.MessagesReceived.Add(1);
 
             foreach (var subscriber in Subscribers[e.ApplicationMessage.Topic])
             {
@@ -127,6 +130,8 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttClient
                 nameof(MqttClient), nameof(Publish), topic, payload);
 
             ManagedMqttClient.EnqueueAsync(topic, payload).Wait();
+
+            Metrics.MessagesSended.Add(1);
         }
     }
 }

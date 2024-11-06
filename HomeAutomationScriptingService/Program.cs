@@ -1,8 +1,12 @@
 using HomeAutomationScriptingService.ScriptingObjects;
 using HomeAutomationScriptingService.ScriptingObjects.MqttClient;
 using HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup;
-using NReco.Logging.File;
-using Syslog.Framework.Logging;
+using OpenTelemetry;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using System.Reflection;
 
 namespace HomeAutomationScriptingService
@@ -22,6 +26,8 @@ namespace HomeAutomationScriptingService
 
                 logger = host.Services.GetRequiredService<ILogger<Program>>();
 
+                logger?.LogInformation("Starting the app... Version: {version}", version);
+
                 logger?.LogInformation("Main: Load config done...");
 
                 logger?.LogInformation("Main: Waiting for RunAsync to complete");
@@ -34,7 +40,8 @@ namespace HomeAutomationScriptingService
             }
             finally
             {
-                logger?.LogInformation("Main: stopping");
+                Console.WriteLine($"Main: stopping...");
+                logger?.LogInformation("Main: stopping...");
 
                 if (host is IAsyncDisposable d) await d.DisposeAsync();
             }
@@ -52,20 +59,22 @@ namespace HomeAutomationScriptingService
                         .AddEnvironmentVariables()
                         ;
                 })
-                .ConfigureLogging((ctx, logging) =>
+                .ConfigureLogging((context, loggingBuilder) =>
                 {
-                    var slConfig = ctx.Configuration.GetSection("SyslogSettings");
-                    if (slConfig != null)
-                    {
-                        var settings = new SyslogLoggerSettings();
-                        slConfig.Bind(settings);
+                    // Adding the OtlpExporter creates a GrpcChannel.
+                    // This switch must be set before creating a GrpcChannel when calling an insecure gRPC service.
+                    // See: https://docs.microsoft.com/aspnet/core/grpc/troubleshoot#call-insecure-grpc-services-with-net-core-client
+                    AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
-                        // Configure structured data here if desired.
-                        logging.AddSyslog(settings);
-                    }
-
-                    // add logging to file capability
-                    logging.AddFile(ctx.Configuration.GetSection("Logging"));
+                    loggingBuilder
+                        .ClearProviders()
+                        .AddOpenTelemetry(options =>
+                        {
+                            options.IncludeScopes = true;
+                            options.ParseStateValues = true;
+                            options.IncludeFormattedMessage = true;
+                            options.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(context.Configuration.GetValue<string>("OpenTelemetry:ServiceName")!));
+                        });
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
@@ -74,6 +83,14 @@ namespace HomeAutomationScriptingService
                     services.Configure<WorkerConfiguration>(hostContext.Configuration.GetSection("MainConfiguration"));
                     services.AddMemoryCache();
                     services.AddHostedService<Worker>();
+                    services.AddOpenTelemetry()
+                        .WithMetrics(builder => builder
+                            .AddMeter(ScriptingServiceMetrics.MeterName)
+                            .AddRuntimeInstrumentation()
+                            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(hostContext.Configuration.GetValue<string>("OpenTelemetry:ServiceName")!))
+                            .AddConsoleExporter()
+                        )
+                        .UseOtlpExporter(OtlpExportProtocol.HttpProtobuf, new Uri(hostContext.Configuration.GetValue<string>("OpenTelemetry:Endpoint")!));
                 });
 
         private static void InitScriptingObjects(HostBuilderContext hostContext, IServiceCollection services)
@@ -84,6 +101,7 @@ namespace HomeAutomationScriptingService
                 services.Configure<MqttClientConfiguration>(mqttConfig);
                 services.AddSingleton(typeof(IScriptingObject), typeof(MqttClient));
                 services.AddSingleton(typeof(IScriptingObject), typeof(MqttZigbeeSwitchGroups));
+                services.AddSingleton<ScriptingServiceMetrics>();
             }
         }
     }
