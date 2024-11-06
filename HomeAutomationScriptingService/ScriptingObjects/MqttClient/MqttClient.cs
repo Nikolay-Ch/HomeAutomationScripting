@@ -78,9 +78,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttClient
         // receive messaged from all subscribed topics
         private async Task MessageReceive(MqttApplicationMessageReceivedEventArgs e)
         {
-            Logger.LogTrace("MqttClient received message for topic: {topic}. Payload: {payload}",
-                e.ApplicationMessage.Topic,
-                Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment));
+            Logger.MessageReceive(e.ApplicationMessage.Topic, Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment));
 
             foreach (var subscriber in Subscribers[e.ApplicationMessage.Topic])
             {
@@ -131,4 +129,10 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttClient
             ManagedMqttClient.EnqueueAsync(topic, payload).Wait();
         }
     }
+}
+
+internal static partial class LoggerExtensions
+{
+    [LoggerMessage(LogLevel.Information, "MqttClient received message for topic: {topic}. Payload: {payload}")]
+    public static partial void MessageReceive(this ILogger logger, string topic, string payload);
 }
