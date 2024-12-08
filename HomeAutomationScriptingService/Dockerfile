@@ -1,9 +1,9 @@
 #See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM mcr.microsoft.com/dotnet/runtime:8.0-jammy-chiseled AS base
+FROM mcr.microsoft.com/dotnet/runtime:9.0-noble-chiseled AS base
 WORKDIR /app
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0-jammy AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0.101-noble AS build
 COPY ["HomeAutomationScriptingService/HomeAutomationScriptingService.csproj", "HomeAutomationScriptingService/"]
 COPY ["HomeAutomationScriptingService/HomeAutomationScriptingService.csproj", "HomeAutomationScriptingService/"]
 
@@ -16,8 +16,8 @@ WORKDIR "/src/HomeAutomationScriptingService"
 RUN dotnet build "./HomeAutomationScriptingService.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
-RUN addgroup --gid 1538 scripting_service
-RUN adduser --uid 1538 -gid 1538 scripting_service
+RUN groupadd -g 1538 scripting_service
+RUN useradd -u 1538 -g 1538 scripting_service
 
 ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./HomeAutomationScriptingService.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
