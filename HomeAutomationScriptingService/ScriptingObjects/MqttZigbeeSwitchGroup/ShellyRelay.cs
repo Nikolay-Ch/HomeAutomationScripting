@@ -79,7 +79,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
             if (payloadObj == null || !payloadObj.TryGetPropertyValue("output", out var toStateObj))
                 return;
 
-            var toState = toStateObj!.GetValue<bool>() ? "on" : "off" ;
+            var toState = toStateObj!.GetValue<bool>() ? "on" : "off";
 
             Configuration.Logger?.LogInformation("{Switch} - {Button} state updated. " +
                 "Current state: {curState}. To state: {toState}.",

@@ -52,7 +52,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
                 nameof(SwitchGroup), nameof(ChangeGroupState), GroupId, stateTo);
 
             lock (ChangeSwitchGroupStateSyncObject)
-                foreach (var @switch in Switches.Where(e=>e.SwitchId != switchFrom.SwitchId))
+                foreach (var @switch in Switches.Where(e => e.SwitchId != switchFrom.SwitchId))
                     @switch.NeedToSwitchButtonStateSet(stateTo);
         }
 
