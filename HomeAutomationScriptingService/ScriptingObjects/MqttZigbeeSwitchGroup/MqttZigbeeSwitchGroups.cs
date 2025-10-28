@@ -8,9 +8,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
     /// <summary>
     /// Group of the switches and its buttons...
     /// </summary>
-    /// <param name="Logger">Logger reference</param>
-    /// <param name="SwitchButtonStateCache">Cache reference</param>
-    /// <param name="StateCacheDurationInSeconds">Cache duration of the switch-button state</param>
+    /// <param name="Configuration">Configuration container, that contains Logger and Cache references</param>
     public class SwitchGroup(MqttZigbeeSwitchGroupsConfiguration Configuration)
     {
         /// <summary>
@@ -40,7 +38,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         /// <summary>
         /// Lock object to prevent parellel-run of the ChangeSwitchGroupState method
         /// </summary>
-        readonly object ChangeSwitchGroupStateSyncObject = new();
+        readonly Lock ChangeSwitchGroupStateSyncObject = new();
 
         /// <summary>
         /// Change state of the all switch-buttons in switch-button group
@@ -74,9 +72,6 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
     /// Scripting object, that used in Scripting service.
     /// It needed to group some switch-buttons in one group to change they state simultaneously
     /// </summary>
-    /// <param name="cache">Cache reference</param>
-    /// <param name="logger">Logger reference</param>
-    /// <param name="componentConfiguration">Configuration reference</param>
     public class MqttZigbeeSwitchGroups : ScriptingConfigurableObject<MqttZigbeeSwitchGroupsConfiguration>
     {
         protected List<SwitchGroup> SwitchGroups { get; } = [];
