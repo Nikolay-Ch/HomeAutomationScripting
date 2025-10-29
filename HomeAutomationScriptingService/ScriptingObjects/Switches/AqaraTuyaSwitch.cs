@@ -1,4 +1,6 @@
-﻿namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
+﻿using HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup;
+
+namespace HomeAutomationScriptingService.ScriptingObjects.Switches
 {
     /// <summary>
     /// Information about Aqara and Tuya switches
@@ -8,10 +10,14 @@
     /// <param name="MqttPrefix">Zigbee prefix for topic of the switch</param>
     /// <param name="SwitchId">MAC-id of the switch</param>
     /// <param name="SwitchButton">Name of the switch button</param>
-    public class BasicSwitch(MqttZigbeeSwitchGroupsConfiguration Configuration,
+    public class AqaraTuyaSwitch(MqttZigbeeSwitchGroupsConfiguration Configuration,
         Action<Switch, string>? SwitchButtonStateChanged, string MqttPrefix, string SwitchId, string SwitchButton)
         : Switch(Configuration, SwitchButtonStateChanged, MqttPrefix, SwitchId, SwitchButton)
     {
+        public override string StateOnValue => throw new NotImplementedException();
+
+        public override string StateOffValue => throw new NotImplementedException();
+
         /// <summary>
         /// Set state of the switch-button through MQTT-message
         /// </summary>
@@ -19,7 +25,7 @@
         protected override void MqttSetState(string toState)
         {
             Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {Switch} - {Button}, {ToState}",
-                nameof(BasicSwitch), nameof(MqttSetState), SwitchId, SwitchButton, toState);
+                nameof(AqaraTuyaSwitch), nameof(MqttSetState), SwitchId, SwitchButton, toState);
 
             if (LogErrorIfMqttIsNull())
                 return;
@@ -36,7 +42,7 @@
         protected override void MqttSubscribe()
         {
             Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {Switch} - {Button}",
-                nameof(BasicSwitch), nameof(MqttSubscribe), SwitchId, SwitchButton);
+                nameof(AqaraTuyaSwitch), nameof(MqttSubscribe), SwitchId, SwitchButton);
 
             if (LogErrorIfMqttIsNull())
                 return;
@@ -50,7 +56,7 @@
         protected override void MqttUnsubscribe()
         {
             Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {Switch} - {Button}",
-                nameof(BasicSwitch), nameof(MqttUnsubscribe), SwitchId, SwitchButton);
+                nameof(AqaraTuyaSwitch), nameof(MqttUnsubscribe), SwitchId, SwitchButton);
 
             if (LogErrorIfMqttIsNull())
                 return;
@@ -66,7 +72,7 @@
         private void SwitchGroupStateUpdated(string topic, string payload)
         {
             Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {topic}, {payload}",
-                nameof(BasicSwitch), nameof(SwitchGroupStateUpdated), topic, payload);
+                nameof(AqaraTuyaSwitch), nameof(SwitchGroupStateUpdated), topic, payload);
 
             // fix one-button switch action payload. Add ephemeral name of button 'main'...
             if (!payload.Contains('_'))

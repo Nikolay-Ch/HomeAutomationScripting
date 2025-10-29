@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup;
+using Microsoft.Extensions.Caching.Memory;
 
-namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
+namespace HomeAutomationScriptingService.ScriptingObjects.Switches
 {
     /// <summary>
     /// Base switch-button class
@@ -12,7 +13,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
     /// <param name="SwitchButton">Name of the switch's button</param>
     public abstract class Switch(MqttZigbeeSwitchGroupsConfiguration Configuration,
         Action<Switch, string>? SwitchButtonStateChanged,
-        string MqttPrefix, string SwitchId, string SwitchButton = Switch.UnnamedButton) : IDisposable
+        string MqttPrefix, string SwitchId, string SwitchButton = Switch.UnnamedButton) : IDisposable, IEquatable<Switch>
     {
         /// <summary>
         /// Configuration object
@@ -141,7 +142,16 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         /// you need to use this constant in script
         /// </summary>
         public const string UnnamedButton = "*/main/*";
-        private bool disposedValue;
+
+        /// <summary>
+        /// Value of the On-state
+        /// </summary>
+        public abstract string StateOnValue { get; }
+
+        /// <summary>
+        /// Value of the Off-state
+        /// </summary>
+        public abstract string StateOffValue { get; }
 
         /// <summary>
         /// Used in logs...
@@ -149,7 +159,15 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         /// <returns></returns>
         public override string ToString() => $"(Id:{SwitchId}, Btn:{SwitchButton}, State:{SwitchButtonState})";
 
+        /// <summary>
+        /// Comparator
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public bool Equals(Switch? other) => this.SwitchId == other?.SwitchId;
+
         #region Dispose
+        private bool disposedValue;
         protected virtual void Dispose(bool disposing)
         {
             Configuration.Logger?.LogTrace("{StructName} - {MethodName} - {switchId} - {switchButton}. Disposing: {disposing}.",

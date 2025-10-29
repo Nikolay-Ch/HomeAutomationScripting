@@ -1,7 +1,8 @@
-﻿using System.Text.Json;
+﻿using HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
+namespace HomeAutomationScriptingService.ScriptingObjects.Switches
 {
     /// <summary>
     /// Information about switch
@@ -17,6 +18,10 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         Action<Switch, string>? SwitchButtonStateChanged, string MqttPrefix, string SwitchId, string SwitchButton)
         : Switch(Configuration, SwitchButtonStateChanged, MqttPrefix, SwitchId, SwitchButton)
     {
+        public override string StateOnValue => throw new NotImplementedException();
+
+        public override string StateOffValue => throw new NotImplementedException();
+
         /// <summary>
         /// Set state of the switch-button through MQTT-message
         /// </summary>
@@ -24,7 +29,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         protected override void MqttSetState(string toState)
         {
             Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {Switch} - {Button}, {ToState}",
-                nameof(BasicSwitch), nameof(MqttSetState), SwitchId, SwitchButton, toState);
+                nameof(AqaraTuyaSwitch), nameof(MqttSetState), SwitchId, SwitchButton, toState);
 
             if (LogErrorIfMqttIsNull())
                 return;
@@ -43,7 +48,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         protected override void MqttSubscribe()
         {
             Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {Switch} - {Button}",
-                nameof(BasicSwitch), nameof(MqttSubscribe), SwitchId, SwitchButton);
+                nameof(AqaraTuyaSwitch), nameof(MqttSubscribe), SwitchId, SwitchButton);
 
             if (LogErrorIfMqttIsNull())
                 return;
@@ -57,7 +62,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         protected override void MqttUnsubscribe()
         {
             Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {Switch} - {Button}",
-                nameof(BasicSwitch), nameof(MqttUnsubscribe), SwitchId, SwitchButton);
+                nameof(AqaraTuyaSwitch), nameof(MqttUnsubscribe), SwitchId, SwitchButton);
 
             if (LogErrorIfMqttIsNull())
                 return;
@@ -73,7 +78,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         private void SwitchGroupStateUpdated(string topic, string payload)
         {
             Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {topic}, {payload}",
-                nameof(BasicSwitch), nameof(SwitchGroupStateUpdated), topic, payload);
+                nameof(AqaraTuyaSwitch), nameof(SwitchGroupStateUpdated), topic, payload);
 
             var payloadObj = JsonSerializer.Deserialize<JsonObject>(payload);
             if (payloadObj == null || !payloadObj.TryGetPropertyValue("output", out var toStateObj))

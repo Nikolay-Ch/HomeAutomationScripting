@@ -1,4 +1,5 @@
 ﻿using HomeAutomationScriptingService.ScriptingObjects.MqttClient;
+using HomeAutomationScriptingService.ScriptingObjects.Switches;
 using Microsoft.ClearScript;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
