@@ -1,5 +1,6 @@
 using HomeAutomationScriptingService.ScriptingObjects;
 using HomeAutomationScriptingService.ScriptingObjects.MqttClient;
+using HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeAutoOffSwitch;
 using HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
@@ -99,8 +100,9 @@ namespace HomeAutomationScriptingService
             if (mqttConfig != null)
             {
                 services.Configure<MqttClientConfiguration>(mqttConfig);
-                services.AddSingleton(typeof(IScriptingObject), typeof(MqttClient));
-                services.AddSingleton(typeof(IScriptingObject), typeof(MqttZigbeeSwitchGroups));
+                services.AddSingleton<IScriptingObject, MqttClient>();
+                services.AddSingleton<IScriptingObject, MqttZigbeeSwitchGroups>();
+                services.AddSingleton<IScriptingObject, MqttZigbeeAutoOffSwitch>();
                 services.AddSingleton<ScriptingServiceMetrics>();
             }
         }

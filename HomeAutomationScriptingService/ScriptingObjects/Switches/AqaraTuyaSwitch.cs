@@ -14,9 +14,9 @@ namespace HomeAutomationScriptingService.ScriptingObjects.Switches
         Action<Switch, string>? SwitchButtonStateChanged, string MqttPrefix, string SwitchId, string SwitchButton)
         : Switch(Configuration, SwitchButtonStateChanged, MqttPrefix, SwitchId, SwitchButton)
     {
-        public override string StateOnValue => throw new NotImplementedException();
+        public override string StateOnValue => "on";
 
-        public override string StateOffValue => throw new NotImplementedException();
+        public override string StateOffValue => "off";
 
         /// <summary>
         /// Set state of the switch-button through MQTT-message

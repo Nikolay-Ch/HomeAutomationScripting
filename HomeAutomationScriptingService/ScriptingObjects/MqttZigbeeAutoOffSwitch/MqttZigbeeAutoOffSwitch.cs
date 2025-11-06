@@ -1,4 +1,5 @@
-﻿using HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup;
+﻿using HomeAutomationScriptingService.ScriptingObjects.MqttClient;
+using HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup;
 using HomeAutomationScriptingService.ScriptingObjects.Switches;
 using Microsoft.ClearScript;
 using Microsoft.Extensions.Caching.Memory;
@@ -18,17 +19,24 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeAutoOffSwitc
         public List<(Switch @switch, int offSeconds)> Switches { get; } = [];
 
         /// <summary>
+        /// Cancellation token from main application to check cancelation request
+        /// </summary>
+        public CancellationToken CancellationToken { get; }
+
+        /// <summary>
         /// Cache Id for AutoOff feature
         /// </summary>
-        protected string GetCacheKey(Switch @switch) => $"AutoOff-{@switch.SwitchId}";
+        protected static string GetCacheKey(Switch @switch) => $"AutoOff-{@switch.SwitchId}";
 
         public MqttZigbeeAutoOffSwitch(
             IMemoryCache cache,
             ILogger<object> logger,
-            IOptions<MqttZigbeeSwitchGroupsConfiguration> componentConfiguration) : base(logger, componentConfiguration)
+            IOptions<MqttZigbeeSwitchGroupsConfiguration> componentConfiguration,
+            IHostApplicationLifetime hostApplicationLifetime) : base(logger, componentConfiguration)
         {
             ComponentConfiguration.Logger = logger;
             ComponentConfiguration.MemoryCache = cache;
+            CancellationToken = hostApplicationLifetime.ApplicationStopping;
         }
 
         /// <summary>
@@ -44,6 +52,18 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeAutoOffSwitc
         }
 
         /// <summary>
+        /// Script API-method. Init this object by MqttClient object
+        /// </summary>
+        /// <param name="mqttClient"></param>
+        public void Init(IMqttClient mqttClient)
+        {
+            Logger.LogTrace("{ClassName} - {MethodName} - {mqttClient}",
+                nameof(MqttZigbeeSwitchGroups), nameof(Init), mqttClient);
+
+            ComponentConfiguration.MqttClient = mqttClient;
+        }
+
+        /// <summary>
         /// Script API-method. Setup auto-off feature of the switch
         /// </summary>
         /// <param name="mqttClient"></param>
@@ -52,13 +72,17 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeAutoOffSwitc
             Logger.LogTrace("{ClassName} - {MethodName} - {OffSeconds} - {SwitchType} - {MqttPrefix} - {SwitchId} - {SwitchButton}",
                 nameof(MqttZigbeeAutoOffSwitch), nameof(RegisterAutoOff), offSeconds, switchType, mqttPrefix, switchId, switchButton);
 
-            Switches.Add((SwitchFactory.CreateSwitch(
+            var @switch = SwitchFactory.CreateSwitch(
                 ComponentConfiguration,
                 switchType,
                 SwitchChangeState,
                 mqttPrefix,
                 switchId,
-                switchButton), offSeconds));
+                switchButton);
+
+            Switches.Add((@switch, offSeconds));
+
+            @switch.Run();
         }
 
         private void SwitchChangeState(Switch @switch, string stateTo)
@@ -67,19 +91,52 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeAutoOffSwitc
                 nameof(MqttZigbeeAutoOffSwitch), nameof(SwitchChangeState), @switch, stateTo);
 
             if (stateTo == @switch.StateOnValue)
-            {
-                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                .SetAbsoluteExpiration(TimeSpan.FromSeconds(Switches.Find((e) => e.@switch == @switch).offSeconds))
-                .RegisterPostEvictionCallback(SwitchOffCallback);
-
-                ComponentConfiguration.MemoryCache!.Set(GetCacheKey(@switch), 1, cacheEntryOptions);
-            }
+                AddCacheValue(@switch);
 
             // delete from cache, if switch has set to off-state
             else
+                RemoveCacheValue(@switch);
+        }
+
+        void AddCacheValue(Switch @switch)
+        {
+            Logger.LogTrace("{ClassName} - {MethodName} - {Switch}",
+                nameof(MqttZigbeeAutoOffSwitch), nameof(AddCacheValue), @switch);
+
+            int offSeconds = Switches.Find((e) => e.@switch == @switch).offSeconds;
+
+            using var cacheEntry = ComponentConfiguration.MemoryCache!.CreateEntry(GetCacheKey(@switch))
+                .SetValue(@switch)
+                .RegisterPostEvictionCallback(SwitchOffCallback);
+
+            Task.Run(async () =>
             {
-                ComponentConfiguration.MemoryCache!.Remove(GetCacheKey(@switch));
-            }
+                try
+                {
+                    Logger.LogTrace("{ClassName} - {MethodName} - OffDelayTimer started - {Switch}",
+                        nameof(MqttZigbeeAutoOffSwitch), nameof(AddCacheValue), @switch);
+
+                    await Task.Delay(offSeconds * 1000, CancellationToken);
+
+                    Logger.LogTrace("{ClassName} - {MethodName} - OffDelayTimer finished - {Switch}",
+                        nameof(MqttZigbeeAutoOffSwitch), nameof(AddCacheValue), @switch);
+                }
+                catch (TaskCanceledException)
+                {
+                    Logger.LogTrace("{ClassName} - {MethodName} - OffDelayTimer cancelled - {Switch}",
+                        nameof(MqttZigbeeAutoOffSwitch), nameof(AddCacheValue), @switch);
+                }
+
+                RemoveCacheValue(@switch);
+            }, CancellationToken);
+        }
+
+        void RemoveCacheValue(Switch @switch)
+        {
+            Logger.LogTrace("{ClassName} - {MethodName} - {Switch}",
+                nameof(MqttZigbeeAutoOffSwitch), nameof(RemoveCacheValue), @switch);
+
+            ComponentConfiguration.MemoryCache!.Remove(GetCacheKey(@switch));
         }
 
         /// <summary>
@@ -94,9 +151,12 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeAutoOffSwitc
             Logger.LogTrace("{ClassName} - {MethodName} - {Key} - {Value} - {Reason} - {State}",
                 nameof(MqttZigbeeAutoOffSwitch), nameof(SwitchOffCallback), key, value, reason, state);
 
-            Switch @switch = (Switch)value!;
+            if (reason == EvictionReason.Removed)
+            {
+                Switch @switch = (Switch)value!;
 
-            @switch.NeedToSwitchButtonStateSet(@switch.StateOffValue);
+                @switch.NeedToSwitchButtonStateSet(@switch.StateOffValue);
+            }
         }
     }
 }

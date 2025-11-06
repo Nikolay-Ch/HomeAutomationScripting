@@ -55,9 +55,9 @@ namespace HomeAutomationScriptingService.ScriptingObjects.Switches
 
                 try
                 {
-                Configuration.MemoryCache.TryGetValue(CacheKey, out string? state);
-                return state;
-            }
+                    Configuration.MemoryCache.TryGetValue(CacheKey, out string? state);
+                    return state;
+                }
                 catch (ObjectDisposedException)
                 {
                     return null;
@@ -172,6 +172,8 @@ namespace HomeAutomationScriptingService.ScriptingObjects.Switches
         /// <param name="other"></param>
         /// <returns></returns>
         public bool Equals(Switch? other) => this.SwitchId == other?.SwitchId;
+        public override bool Equals(object? obj) => Equals(obj as Switch);
+        public override int GetHashCode() => SwitchId.GetHashCode();
 
         #region Dispose
         private bool disposedValue;
