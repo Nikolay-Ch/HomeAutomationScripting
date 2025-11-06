@@ -80,7 +80,7 @@ namespace HomeAutomationScriptingService
                 {
                     InitScriptingObjects(hostContext, services);
 
-                    services.Configure<WorkerConfiguration>(hostContext.Configuration.GetSection("MainConfiguration"));
+                    services.Configure<MainConfiguration>(hostContext.Configuration.GetSection("MainConfiguration"));
                     services.AddMemoryCache();
                     services.AddHostedService<Worker>();
                     services.AddOpenTelemetry()

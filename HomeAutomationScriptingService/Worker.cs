@@ -6,12 +6,12 @@ namespace HomeAutomationScriptingService
 {
     public class Worker(
         IEnumerable<IScriptingObject> scriptingObjects,
-        IOptions<WorkerConfiguration> workerOptions,
+        IOptions<MainConfiguration> mainOptions,
         ILogger<Worker> logger,
         ScriptingServiceMetrics metrics) : BackgroundService
     {
-        protected IEnumerable<IScriptingObject> ScriptingObjects { get; } = new List<IScriptingObject>(scriptingObjects);
-        protected WorkerConfiguration WorkerOptions { get; } = workerOptions.Value;
+        protected IEnumerable<IScriptingObject> ScriptingObjects { get; } = [.. scriptingObjects];
+        protected MainConfiguration MainConfiguration { get; } = mainOptions.Value;
         protected ILogger<Worker> Logger { get; } = logger;
         protected ScriptingServiceMetrics Metrics { get; } = metrics;
 
@@ -21,7 +21,7 @@ namespace HomeAutomationScriptingService
             foreach (var scriptingObject in scriptingObjects)
                 scriptingObject.InitScriptEngine(engine);
 
-            var scripts = Directory.EnumerateFiles("./scripts").ToList();
+            var scripts = Directory.EnumerateFiles($"./{MainConfiguration.ScriptsFilesFolder}").ToList();
             Logger.LogInformation("{scriptsCount} scripts founded.", scripts.Count);
             Metrics.ScriptsFound.Add(scripts.Count);
 
