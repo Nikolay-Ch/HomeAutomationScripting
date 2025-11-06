@@ -53,8 +53,15 @@ namespace HomeAutomationScriptingService.ScriptingObjects.Switches
                 if (Configuration.MemoryCache == null)
                     return null;
 
+                try
+                {
                 Configuration.MemoryCache.TryGetValue(CacheKey, out string? state);
                 return state;
+            }
+                catch (ObjectDisposedException)
+                {
+                    return null;
+                }
             }
         }
 

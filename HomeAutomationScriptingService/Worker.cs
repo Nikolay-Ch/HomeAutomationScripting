@@ -51,7 +51,15 @@ namespace HomeAutomationScriptingService
                     Logger.LogTrace("Worker running at: {time}", DateTimeOffset.Now);
                 }
 
-                await Task.Delay(1000, stoppingToken);
+                try
+                {
+                    await Task.Delay(1000, stoppingToken);
+                }
+                catch (TaskCanceledException)
+                {
+                    Logger.LogTrace("Worker cancelled at: {time}", DateTimeOffset.Now);
+                    break;
+                }
             }
         }
     }
