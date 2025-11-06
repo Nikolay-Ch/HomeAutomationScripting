@@ -24,7 +24,7 @@ namespace HomeAutomationScriptingService
 
         protected DateTime ServiceStarted = DateTime.UtcNow;
         private int lastUptameHertbeat = 0;
-        private readonly object syncObject = new();
+        private readonly Lock syncObject = new();
         public void RenewUptime()
         {
             lock (syncObject)
