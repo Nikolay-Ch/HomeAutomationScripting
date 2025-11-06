@@ -6,7 +6,7 @@ using MQTTnet.Server;
 using System.Security.Authentication;
 using System.Text;
 
-namespace ConsoleApp2
+namespace ConsoleApp1
 {
     public class Mqtt
     {
