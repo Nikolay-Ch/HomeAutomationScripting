@@ -1,8 +1,8 @@
 ﻿using HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace HomeAutomationScriptingService.ScriptingObjects.Switches
-{
+namespace HomeAutomationScriptingService.ScriptingObjects.Switches;
+
     /// <summary>
     /// Base switch-button class
     /// </summary>
@@ -204,4 +204,3 @@ namespace HomeAutomationScriptingService.ScriptingObjects.Switches
         }
         #endregion
     }
-}
