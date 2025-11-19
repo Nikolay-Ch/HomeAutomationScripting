@@ -27,17 +27,21 @@ namespace HomeAutomationScriptingService
 
                 logger = host.Services.GetRequiredService<ILogger<Program>>();
 
-                logger?.LogInformation("Starting the app... Version: {version}", version);
+                if (logger.IsEnabled(LogLevel.Information))
+                {
+                    logger.LogInformation("Starting the app... Version: {version}", version);
 
-                logger?.LogInformation("Main: Load config done...");
+                    logger.LogInformation("Main: Load config done...");
 
-                logger?.LogInformation("Main: Waiting for RunAsync to complete");
+                    logger.LogInformation("Main: Waiting for RunAsync to complete");
+                }
 
                 await host.StartAsync();
 
                 await host.WaitForShutdownAsync();
 
-                logger?.LogInformation("Main: RunAsync has completed");
+                if (logger.IsEnabled(LogLevel.Information))
+                    logger.LogInformation("Main: RunAsync has completed");
             }
             finally
             {
@@ -100,7 +104,7 @@ namespace HomeAutomationScriptingService
             if (mqttConfig != null)
             {
                 services.Configure<MqttClientConfiguration>(mqttConfig);
-                services.AddSingleton<IScriptingObject, MqttClient>();
+                services.AddSingleton<IScriptingObject, ScriptingMqttClient>();
                 services.AddSingleton<IScriptingObject, MqttZigbeeSwitchGroups>();
                 services.AddSingleton<IScriptingObject, MqttZigbeeAutoOffSwitch>();
                 services.AddSingleton<ScriptingServiceMetrics>();

@@ -7,8 +7,8 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
     {
         public required int StateCacheDurationInSeconds { get; set; } = 2;
         public IMemoryCache? MemoryCache { get; set; }
-        public ILogger? Logger { get; set; }
-        public IMqttClient? MqttClient { get; set; }
+        public required ILogger Logger { get; set; }
+        public IScriptingMqttClient? MqttClient { get; set; }
 
     }
 }

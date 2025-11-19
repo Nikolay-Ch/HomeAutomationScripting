@@ -47,6 +47,7 @@ namespace HomeAutomationScriptingService.ScriptingObjects.Switches;
         {
             get
             {
+            if (Configuration.Logger.IsEnabled(LogLevel.Trace))
                 Configuration.Logger?.LogTrace("{StructName} - {MethodName}_Get - {switchId} - {switchButton}",
                     nameof(Switch), nameof(SwitchButtonState), SwitchId, SwitchButton);
 
@@ -55,8 +56,10 @@ namespace HomeAutomationScriptingService.ScriptingObjects.Switches;
 
                 try
                 {
-                    Configuration.MemoryCache.TryGetValue(CacheKey, out string? state);
-                    return state;
+                if (Configuration.MemoryCache.TryGetValue(CacheKey, out object? state))
+                    return state as string;
+
+                return RequestStateSync();
                 }
                 catch (ObjectDisposedException)
                 {
@@ -81,7 +84,8 @@ namespace HomeAutomationScriptingService.ScriptingObjects.Switches;
         /// <param name="stateTo"></param>
         public void NeedToSwitchButtonStateSet(string stateTo)
         {
-            Configuration.Logger?.LogTrace("{StructName} - {MethodName} - {switchId} - {switchButton}, State: {curState} => {stateTo}.",
+        if (Configuration.Logger.IsEnabled(LogLevel.Trace))
+            Configuration.Logger.LogTrace("{ClassName} - {MethodName} - {switchId} - {switchButton}, State: {curState} => {stateTo}.",
                 nameof(Switch), nameof(NeedToSwitchButtonStateSet), SwitchId, SwitchButton, SwitchButtonState, stateTo);
 
             if (SwitchButtonState != stateTo)
@@ -94,12 +98,18 @@ namespace HomeAutomationScriptingService.ScriptingObjects.Switches;
         /// <param name="stateTo">Target state</param>
         protected void OnSwitchButtonStateSet(string stateTo)
         {
-            Configuration.Logger?.LogTrace("{StructName} - {MethodName} - {switchId} - {switchButton}. State: {curState} => {state}.",
+        if (Configuration.Logger.IsEnabled(LogLevel.Trace))
+            Configuration.Logger.LogTrace("{ClassName} - {MethodName} - {switchId} - {switchButton}. State: {curState} => {state}.",
                 nameof(Switch), nameof(OnSwitchButtonStateSet), SwitchId, SwitchButton, SwitchButtonState, stateTo);
 
             if (SwitchButtonState != stateTo)
             {
-                Configuration.MemoryCache?.Set(CacheKey, stateTo, TimeSpan.FromSeconds(Configuration.StateCacheDurationInSeconds));
+            using (ICacheEntry cacheEntry = Configuration.MemoryCache?.CreateEntry(CacheKey)!)
+            {
+                cacheEntry.Value = stateTo;
+                cacheEntry.SlidingExpiration =  TimeSpan.FromSeconds(Configuration.StateCacheDurationInSeconds);
+            }
+
                 SwitchButtonStateChanged?.Invoke(this, stateTo);
             }
         }
@@ -126,12 +136,15 @@ namespace HomeAutomationScriptingService.ScriptingObjects.Switches;
         /// <returns></returns>
         protected bool LogErrorIfMqttIsNull()
         {
-            Configuration.Logger?.LogTrace("{StructName} - {MethodName} - {switchId} - {switchButton}",
+        if (Configuration.Logger.IsEnabled(LogLevel.Trace))
+            Configuration.Logger.LogTrace("{ClassName} - {MethodName} - {switchId} - {switchButton}",
                 nameof(Switch), nameof(LogErrorIfMqttIsNull), SwitchId, SwitchButton);
 
             if (Configuration.MqttClient == null)
             {
+            if (Configuration.Logger.IsEnabled(LogLevel.Warning))
                 Configuration.Logger?.LogWarning("MqttClient is null. Maybe you forget to call Init method?");
+            
                 return true;
             }
 
@@ -179,7 +192,8 @@ namespace HomeAutomationScriptingService.ScriptingObjects.Switches;
         private bool disposedValue;
         protected virtual void Dispose(bool disposing)
         {
-            Configuration.Logger?.LogTrace("{StructName} - {MethodName} - {switchId} - {switchButton}. Disposing: {disposing}.",
+        if (Configuration.Logger.IsEnabled(LogLevel.Trace))
+            Configuration.Logger.LogTrace("{ClassName} - {MethodName} - {switchId} - {switchButton}. Disposing: {disposing}.",
                 nameof(Switch), nameof(Dispose), SwitchId, SwitchButton, disposing);
 
             if (!disposedValue)

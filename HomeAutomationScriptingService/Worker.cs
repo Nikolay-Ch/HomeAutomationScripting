@@ -22,17 +22,24 @@ namespace HomeAutomationScriptingService
                 scriptingObject.InitScriptEngine(engine);
 
             var scripts = Directory.EnumerateFiles($"./{MainConfiguration.ScriptsFilesFolder}").ToList();
-            Logger.LogInformation("{scriptsCount} scripts founded.", scripts.Count);
+
+            if (Logger.IsEnabled(LogLevel.Information))
+                Logger.LogInformation("{scriptsCount} scripts founded.", scripts.Count);
+
             Metrics.ScriptsFound.Add(scripts.Count);
 
             foreach (var scriptFilePath in scripts)
             {
                 try
                 {
-                    Logger.LogInformation("Try to load script: {scriptFilePath}", scriptFilePath);
+                    if (Logger.IsEnabled(LogLevel.Information))
+                        Logger.LogInformation("Try to load script: {scriptFilePath}", scriptFilePath);
+                    
                     var scriptText = File.ReadAllText(scriptFilePath);
 
-                    Logger.LogInformation("Try to execute script: {scriptFilePath}", scriptFilePath);
+                    if (Logger.IsEnabled(LogLevel.Information))
+                        Logger.LogInformation("Try to execute script: {scriptFilePath}", scriptFilePath);
+                    
                     engine.Execute(scriptText);
 
                     Metrics.ScriptsLoaded.Add(1);
@@ -48,7 +55,8 @@ namespace HomeAutomationScriptingService
 
                 if (Logger.IsEnabled(LogLevel.Trace))
                 {
-                    Logger.LogTrace("Worker running at: {time}", DateTimeOffset.Now);
+                    if (Logger.IsEnabled(LogLevel.Trace))
+                        Logger.LogTrace("Worker running at: {time}", DateTimeOffset.Now);
                 }
 
                 try
@@ -57,7 +65,9 @@ namespace HomeAutomationScriptingService
                 }
                 catch (TaskCanceledException)
                 {
-                    Logger.LogTrace("Worker cancelled at: {time}", DateTimeOffset.Now);
+                    if (Logger.IsEnabled(LogLevel.Trace))
+                        Logger.LogTrace("Worker cancelled at: {time}", DateTimeOffset.Now);
+
                     break;
                 }
             }

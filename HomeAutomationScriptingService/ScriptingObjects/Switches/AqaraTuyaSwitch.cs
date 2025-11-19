@@ -18,14 +18,20 @@ public class AqaraTuyaSwitch(MqttZigbeeSwitchGroupsConfiguration Configuration,
 
     public override string StateOffValue => "off";
 
+    protected override void MqttRequestStateSync()
+    {
+        throw new NotImplementedException();
+    }
+
     /// <summary>
     /// Set state of the switch-button through MQTT-message
     /// </summary>
     /// <param name="toState">Target state</param>
     protected override void MqttSetState(string toState)
     {
-        Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {Switch} - {Button}, {ToState}",
-            nameof(AqaraTuyaSwitch), nameof(MqttSetState), SwitchId, SwitchButton, toState);
+        if (Configuration.Logger.IsEnabled(LogLevel.Trace))
+            Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {Switch} - {Button}, {ToState}",
+                nameof(AqaraTuyaSwitch), nameof(MqttSetState), SwitchId, SwitchButton, toState);
 
         if (LogErrorIfMqttIsNull())
             return;
@@ -41,8 +47,9 @@ public class AqaraTuyaSwitch(MqttZigbeeSwitchGroupsConfiguration Configuration,
     /// </summary>
     protected override void MqttSubscribe()
     {
-        Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {Switch} - {Button}",
-            nameof(AqaraTuyaSwitch), nameof(MqttSubscribe), SwitchId, SwitchButton);
+        if (Configuration.Logger.IsEnabled(LogLevel.Trace))
+            Configuration.Logger.LogTrace("{ClassName} - {MethodName} - {Switch} - {Button}",
+                nameof(AqaraTuyaSwitch), nameof(MqttSubscribe), SwitchId, SwitchButton);
 
         if (LogErrorIfMqttIsNull())
             return;
@@ -55,8 +62,9 @@ public class AqaraTuyaSwitch(MqttZigbeeSwitchGroupsConfiguration Configuration,
     /// </summary>
     protected override void MqttUnsubscribe()
     {
-        Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {Switch} - {Button}",
-            nameof(AqaraTuyaSwitch), nameof(MqttUnsubscribe), SwitchId, SwitchButton);
+        if (Configuration.Logger.IsEnabled(LogLevel.Trace))
+            Configuration.Logger.LogTrace("{ClassName} - {MethodName} - {Switch} - {Button}",
+                nameof(AqaraTuyaSwitch), nameof(MqttUnsubscribe), SwitchId, SwitchButton);
 
         if (LogErrorIfMqttIsNull())
             return;
@@ -71,8 +79,9 @@ public class AqaraTuyaSwitch(MqttZigbeeSwitchGroupsConfiguration Configuration,
     /// <param name="payload">MQTT-payload </param>
     private void SwitchGroupStateUpdated(string topic, string payload)
     {
-        Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {topic}, {payload}",
-            nameof(AqaraTuyaSwitch), nameof(SwitchGroupStateUpdated), topic, payload);
+        if (Configuration.Logger.IsEnabled(LogLevel.Trace))
+            Configuration.Logger.LogTrace("{ClassName} - {MethodName} - {topic}, {payload}",
+                nameof(AqaraTuyaSwitch), nameof(SwitchGroupStateUpdated), topic, payload);
 
         // fix one-button switch action payload. Add ephemeral name of button 'main'...
         if (!payload.Contains('_'))
@@ -86,9 +95,10 @@ public class AqaraTuyaSwitch(MqttZigbeeSwitchGroupsConfiguration Configuration,
         if (switchButton != SwitchButton)
             return;
 
-        Configuration.Logger?.LogInformation("{Switch} - {Button} state updated. " +
-            "Current state: {curState}. To state: {toState}.",
-            SwitchId, SwitchButton, SwitchButtonState, toState);
+        if (Configuration.Logger.IsEnabled(LogLevel.Information))
+            Configuration.Logger.LogInformation("{Switch} - {Button} state updated. " +
+                "Current state: {curState}. To state: {toState}.",
+                SwitchId, SwitchButton, SwitchButtonState, toState);
 
         OnSwitchButtonStateSet(toState);
     }

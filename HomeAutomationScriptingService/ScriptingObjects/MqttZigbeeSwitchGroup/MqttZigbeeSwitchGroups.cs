@@ -30,8 +30,9 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         /// <param name="switchButton">Name of the switch button</param>
         public void AddSwitch(string switchType, string mqttPrefix, string switchId, string switchButton = Switch.UnnamedButton)
         {
-            Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {GroupId}, {mqttPrefix}, {switchId}, {switchButton}",
-                nameof(SwitchGroup), nameof(AddSwitch), GroupId, mqttPrefix, switchId, switchButton);
+            if (Configuration.Logger.IsEnabled(LogLevel.Trace))
+                Configuration.Logger.LogTrace("{ClassName} - {MethodName} - {GroupId}, {mqttPrefix}, {switchId}, {switchButton}",
+                    nameof(SwitchGroup), nameof(AddSwitch), GroupId, mqttPrefix, switchId, switchButton);
 
             Switches.Add(SwitchFactory.CreateSwitch(Configuration, switchType, ChangeGroupState, mqttPrefix, switchId, switchButton));
         }
@@ -47,8 +48,9 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         /// <param name="stateTo">Target state of the switch-buttons</param>
         protected void ChangeGroupState(Switch switchFrom, string stateTo)
         {
-            Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {GroupId}, {stateTo}",
-                nameof(SwitchGroup), nameof(ChangeGroupState), GroupId, stateTo);
+            if (Configuration.Logger.IsEnabled(LogLevel.Trace))
+                Configuration.Logger.LogTrace("{ClassName} - {MethodName} - {GroupId}, {stateTo}",
+                    nameof(SwitchGroup), nameof(ChangeGroupState), GroupId, stateTo);
 
             lock (ChangeSwitchGroupStateSyncObject)
                 foreach (var @switch in Switches.Where(e => e.SwitchId != switchFrom.SwitchId))
@@ -61,8 +63,9 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         /// <param name="group">Instance of the switch-button group to run</param>
         public void Run()
         {
-            Configuration.Logger?.LogTrace("{ClassName} - {MethodName} - {groupId}",
-                nameof(SwitchGroup), nameof(Run), GroupId);
+            if (Configuration.Logger.IsEnabled(LogLevel.Trace))
+                Configuration.Logger.LogTrace("{ClassName} - {MethodName} - {groupId}",
+                    nameof(SwitchGroup), nameof(Run), GroupId);
 
             foreach (var @switch in Switches)
                 @switch.Run();
@@ -92,8 +95,9 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         /// <param name="scriptEngine"></param>
         public override void InitScriptEngine(IScriptEngine scriptEngine)
         {
-            Logger.LogTrace("{ClassName} - {MethodName} - {scriptEngine}",
-                nameof(MqttZigbeeSwitchGroups), nameof(InitScriptEngine), scriptEngine);
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{ClassName} - {MethodName} - {scriptEngine}",
+                    nameof(MqttZigbeeSwitchGroups), nameof(InitScriptEngine), scriptEngine);
 
             scriptEngine.AddHostObject("MqttGroupSwitch", this);
         }
@@ -102,10 +106,11 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         /// Script API-method. Init this object by MqttClient object
         /// </summary>
         /// <param name="mqttClient"></param>
-        public void Init(IMqttClient mqttClient)
+        public void Init(IScriptingMqttClient mqttClient)
         {
-            Logger.LogTrace("{ClassName} - {MethodName} - {mqttClient}",
-                nameof(MqttZigbeeSwitchGroups), nameof(Init), mqttClient);
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{ClassName} - {MethodName} - {mqttClient}",
+                    nameof(MqttZigbeeSwitchGroups), nameof(Init), mqttClient);
 
             ComponentConfiguration.MqttClient = mqttClient;
         }
@@ -116,8 +121,9 @@ namespace HomeAutomationScriptingService.ScriptingObjects.MqttZigbeeSwitchGroup
         /// <returns>Instance of the new switch-button group</returns>
         public SwitchGroup RegisterSwitchGroup()
         {
-            Logger.LogTrace("{ClassName} - {MethodName}",
-                nameof(MqttZigbeeSwitchGroups), nameof(RegisterSwitchGroup));
+            if (Logger.IsEnabled(LogLevel.Trace))
+                Logger.LogTrace("{ClassName} - {MethodName}",
+                    nameof(MqttZigbeeSwitchGroups), nameof(RegisterSwitchGroup));
 
             var sw = new SwitchGroup(ComponentConfiguration);
 
